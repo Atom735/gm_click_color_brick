@@ -8,17 +8,26 @@
 
 #include "dbg.h"
 
-CONST LPCWSTR   g_lpWndClassName    = L"Atom735-WCN-gmClickHexBlock";
+CONST LPCWSTR   g_lpWndClassName    = L"Atom735-WCN-gmClickColorBrick";
 HINSTANCE       g_hInstance         = NULL;
-HANDLE          g_hLogFileOut       = NULL;
 
 LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     LOGDBG_WM( hWnd, uMsg, wParam, lParam );
+
+    static UINT gm_nClientWidth     = 0;
+    static UINT gm_nClientHeight    = 0;
+
     switch( uMsg )
     {
         case WM_CREATE:
         {
+            return 0;
+        }
+        case WM_SIZE:
+        {
+            gm_nClientWidth     = LOWORD(lParam);
+            gm_nClientHeight    = HIWORD(lParam);
             return 0;
         }
         case WM_DESTROY:
@@ -30,16 +39,44 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
         {
             RECT rc;
             GetClientRect( hWnd, &rc );
-
             FillRect( (HDC)(wParam), &rc, GetStockBrush( BLACK_BRUSH ) );
-
             return 1;
         }
         case WM_PAINT:
         {
-            HDC hDC;
             PAINTSTRUCT ps;
-            hDC = BeginPaint( hWnd, &ps);
+            HDC hDC = BeginPaint( hWnd, &ps);
+            HDC bmp_hDC = CreateCompatibleDC( hDC );
+            PUINT32 bmp_pvBits;
+            HBITMAP bmp_hBMP;
+            HBITMAP bmp_hBMP_Old;
+            {
+                BITMAPINFO bmi;
+                ZeroMemory(&bmi, sizeof(BITMAPINFO));
+                bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+                bmi.bmiHeader.biWidth       = gm_nClientWidth;
+                bmi.bmiHeader.biHeight      = gm_nClientHeight;
+                bmi.bmiHeader.biPlanes      = 1;
+                bmi.bmiHeader.biBitCount    = 32;
+                bmi.bmiHeader.biCompression = BI_RGB;
+                bmi.bmiHeader.biSizeImage   = gm_nClientWidth * gm_nClientHeight * 4;
+                bmp_hBMP = CreateDIBSection( hDC, &bmi, DIB_RGB_COLORS,
+                    (PVOID*)(&bmp_pvBits), NULL, 0x0 );
+                bmp_hBMP_Old = SelectBitmap( bmp_hDC, bmp_hBMP );
+            }
+
+            PUINT32 p=bmp_pvBits;
+            for( int y=0; y<gm_nClientHeight; ++y )
+                for( int x=0; x<gm_nClientWidth; ++x )
+                    (*p=(((x&y)&0xff)<<16)|(((x|y)&0xff)<<8)|(((x^y)&0xff)<<0)), ++p;
+
+            {
+                BitBlt( hDC, 0, 0, gm_nClientWidth, gm_nClientHeight,
+                    bmp_hDC, 0, 0, SRCCOPY );
+                SelectBitmap( bmp_hDC, bmp_hBMP_Old );
+                DeleteBitmap( bmp_hBMP );
+                DeleteDC( bmp_hDC );
+            }
             EndPaint( hWnd, &ps );
             return 0;
         }

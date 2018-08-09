@@ -3,7 +3,7 @@
 
 #ifndef NDEBUG
     HANDLE          g_hLogConsoleOut    = NULL;
-    HANDLE          g_pLogFileOut       = NULL;
+    HANDLE          g_hLogFileOut       = NULL;
     VOID rLogDbg( LPCWSTR fmt, ... )
     {
         WCHAR pBuf[1024];
@@ -16,21 +16,21 @@
         va_end( args );
         pBuf[nLen] = L'\n';
         WriteConsoleW( g_hLogConsoleOut, pBuf, nLen+1, &dw, NULL );
-        WriteFile( g_pLogFileOut, pBuf, (nLen+1)*sizeof(WCHAR), &dw, NULL );
+        WriteFile( g_hLogFileOut, pBuf, (nLen+1)*sizeof(WCHAR), &dw, NULL );
     }
     VOID rLogDbgInit( LPCWSTR fName )
     {
         AllocConsole();
         g_hLogConsoleOut = GetStdHandle( STD_OUTPUT_HANDLE );
-        g_pLogFileOut = CreateFileW( fName, GENERIC_WRITE, FILE_SHARE_READ,
+        g_hLogFileOut = CreateFileW( fName, GENERIC_WRITE, FILE_SHARE_READ,
             NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-        SetFilePointer( g_pLogFileOut, 0, NULL, FILE_END );
+        SetFilePointer( g_hLogFileOut, 0, NULL, FILE_END );
         rLogDbg( g_asLogStrings[LOGS___START] );
     }
     VOID rLogDbgRelease()
     {
         rLogDbg( g_asLogStrings[LOGS___END] );
-        CloseHandle( g_pLogFileOut );
+        CloseHandle( g_hLogFileOut );
         system( "pause" );
     }
 #endif

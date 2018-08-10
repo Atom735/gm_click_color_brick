@@ -7,6 +7,7 @@
 #include <stdarg.h>
 
 #define LOGDBG(...) rLogDbg(__VA_ARGS__)
+#define __rand(x,a,c) (a*x+c)
 
 #ifndef NDEBUG
     VOID rLogDbg( LPCWSTR fmt, ... );

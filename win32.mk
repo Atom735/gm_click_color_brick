@@ -7,5 +7,5 @@ all : main.exe
 
 
 
-main.exe : src/main.c src/dbg.c src/dbg_wm.c
+main.exe : src/main.c src/dbg.c src/dbg_wm.c src/gm_ccb.c
 	$(CC) -o $@ $(CCP_DEFS) -mwindows -municode -march=pentium4 -Wall $^

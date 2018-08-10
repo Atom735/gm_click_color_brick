@@ -11,6 +11,7 @@ VOID    gmCCB_NewGame( PGM_CCB p, UINT random_seed );
 VOID    gmCCB_ColorAdd( PGM_CCB p, UINT32 cNormal, UINT32 cHover );
 VOID    gmCCB_ReCalcVP( PGM_CCB p, UINT w, UINT h );
 BOOL    gmCCB_ReCalcCursor( PGM_CCB p, UINT x, UINT y );
+BOOL    gmCCB_ReCalcClick( PGM_CCB p, UINT x, UINT y );
 VOID    gmCCB_Render_GDI_Create( PGM_CCB p, HDC hDC, UINT w, UINT h );
 VOID    gmCCB_Render_GDI_Delete( PGM_CCB p, HDC hDC, UINT w, UINT h );
 VOID    gmCCB_Render_GDI( PGM_CCB p, HDC hDC, UINT w, UINT h );

@@ -29,7 +29,7 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
     {
         case WM_CREATE:
         {
-            pgm = gmCCB_Create( 32, 16 );
+            pgm = gmCCB_Create( 64, 8 );
             gmCCB_NewGame( pgm, __gm );
             HDC hDC = GetDC( hWnd );
             gmCCB_Render_GDI_Create( pgm, hDC, 1, 1 );
@@ -99,6 +99,14 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
             _cu_X = GET_X_LPARAM(lParam);
             _cu_Y = _cl_H - GET_Y_LPARAM(lParam) - 1;
             if(gmCCB_ReCalcCursor( pgm, _cu_X, _cu_Y ))
+                InvalidateRect( hWnd, NULL, FALSE );
+            return 0;
+        }
+        case WM_LBUTTONDOWN:
+        {
+            _cu_X = GET_X_LPARAM(lParam);
+            _cu_Y = _cl_H - GET_Y_LPARAM(lParam) - 1;
+            if(gmCCB_ReCalcClick( pgm, _cu_X, _cu_Y ))
                 InvalidateRect( hWnd, NULL, FALSE );
             return 0;
         }

@@ -16,5 +16,24 @@ VOID    gmCCB_Render_GDI_Create( PGM_CCB p, HDC hDC, UINT w, UINT h );
 VOID    gmCCB_Render_GDI_Delete( PGM_CCB p, HDC hDC, UINT w, UINT h );
 VOID    gmCCB_Render_GDI( PGM_CCB p, HDC hDC, UINT w, UINT h );
 
+
+typedef struct gm_ccs GM_CCS;
+
+GM_CCS* gm_ccs_Alloc();
+VOID    gm_ccs_Free( GM_CCS * p );
+VOID    gm_ccs_NewGame( GM_CCS * p );
+
+typedef struct render RENDER;
+
+RENDER* render_Alloc();
+VOID    render_Free( RENDER * p );
+VOID    render_GDI_Create( RENDER * p, HDC hDC, UINT w, UINT h );
+VOID    render_Flush( RENDER * p, HDC hDC );
+
+VOID    render_draw_Point( RENDER * p, UINT x, UINT y, UINT32 c );
+VOID render_draw_Rectangle( RENDER * p, FLOAT x, FLOAT y, UINT32 c, FLOAT w, FLOAT h, FLOAT r, FLOAT r2 );
+
+VOID    render_gm_ccs( RENDER * p, GM_CCS * gm );
+
 #endif
 

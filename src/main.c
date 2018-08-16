@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 
 #include "dbg.h"
 #include "gm_ccb.h"
@@ -13,46 +14,68 @@ CONST LPCWSTR   g_lpWndClassName    = L"Atom735-WCN-gmClickColorBrick";
 HINSTANCE       g_hInstance         = NULL;
 
 
-
 LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
+    assert( 1 );
     LOGDBG_WM( hWnd, uMsg, wParam, lParam );
 
-    static UINT __gm = 777;
-    static PGM_CCB pgm = NULL;
+    // static UINT __gm = 777;
+    // static PGM_CCB pgm = NULL;
     static UINT _cl_W;
     static UINT _cl_H;
     static UINT _cu_X;
     static UINT _cu_Y;
 
+    static GM_CCS * gm_ccs;
+    static RENDER * render;
+
     switch( uMsg )
     {
         case WM_CREATE:
         {
+            gm_ccs = gm_ccs_Alloc();
+            gm_ccs_NewGame( gm_ccs );
+
+            render = render_Alloc();
+
+            #if 0
             pgm = gmCCB_Create( 64, 8 );
             gmCCB_NewGame( pgm, __gm );
             HDC hDC = GetDC( hWnd );
             gmCCB_Render_GDI_Create( pgm, hDC, 1, 1 );
             ReleaseDC( hWnd, hDC );
+            #endif
             return 0;
         }
         case WM_SIZE:
         {
             _cl_W = LOWORD(lParam);
             _cl_H = HIWORD(lParam);
+
+            HDC hDC = GetDC( hWnd );
+            render_GDI_Create( render, hDC, _cl_W, _cl_H );
+            ReleaseDC( hWnd, hDC );
+
+            #if 0
             gmCCB_ReCalcVP( pgm, _cl_W, _cl_H );
             HDC hDC = GetDC( hWnd );
             gmCCB_Render_GDI_Delete( pgm, hDC, _cl_W, _cl_H );
             gmCCB_Render_GDI_Create( pgm, hDC, _cl_W, _cl_H );
             ReleaseDC( hWnd, hDC );
+            #endif
             return 0;
         }
         case WM_DESTROY:
         {
+            gm_ccs_Free( gm_ccs );
+            render_Free( render );
+
+            #if 0
             HDC hDC = GetDC( hWnd );
             gmCCB_Render_GDI_Delete( pgm, hDC, _cl_W, _cl_H );
             ReleaseDC( hWnd, hDC );
             gmCCB_Delete( pgm );
+            #endif
             PostQuitMessage(0);
             return 0;
         }
@@ -67,7 +90,11 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
         {
             PAINTSTRUCT ps;
             HDC hDC = BeginPaint( hWnd, &ps);
-            gmCCB_Render_GDI( pgm, hDC, _cl_W, _cl_H );
+            render_gm_ccs( render, gm_ccs );
+            render_draw_Point( render, _cu_X, _cu_Y, 0x7fffffff );
+            render_draw_Rectangle( render, _cu_X, _cu_Y, 0xffff00ff, 512.0f, 512.0f, 128.0f, 32.0f );
+            render_Flush( render, hDC );
+            // gmCCB_Render_GDI( pgm, hDC, _cl_W, _cl_H );
             EndPaint( hWnd, &ps );
             return 0;
         }
@@ -82,7 +109,8 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
                 }
                 case VK_F2:
                 {
-                    gmCCB_NewGame( pgm, ++__gm );
+                    // gmCCB_NewGame( pgm, ++__gm );
+                    gm_ccs_NewGame( gm_ccs );
                     InvalidateRect( hWnd, NULL, FALSE );
                     return 0;
                 }
@@ -98,7 +126,7 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
         {
             _cu_X = GET_X_LPARAM(lParam);
             _cu_Y = _cl_H - GET_Y_LPARAM(lParam) - 1;
-            if(gmCCB_ReCalcCursor( pgm, _cu_X, _cu_Y ))
+            // if(gmCCB_ReCalcCursor( pgm, _cu_X, _cu_Y ))
                 InvalidateRect( hWnd, NULL, FALSE );
             return 0;
         }
@@ -106,8 +134,8 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
         {
             _cu_X = GET_X_LPARAM(lParam);
             _cu_Y = _cl_H - GET_Y_LPARAM(lParam) - 1;
-            if(gmCCB_ReCalcClick( pgm, _cu_X, _cu_Y ))
-                InvalidateRect( hWnd, NULL, FALSE );
+            // if(gmCCB_ReCalcClick( pgm, _cu_X, _cu_Y ))
+                // InvalidateRect( hWnd, NULL, FALSE );
             return 0;
         }
         case WM_CLOSE:

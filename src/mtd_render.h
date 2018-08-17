@@ -4,6 +4,7 @@
 #include <windows.h>
 
 typedef struct render RENDER;
+typedef struct renderLM RENDERLM;
 
 RENDER* RENDER_Alloc();
 VOID    RENDER_Free( RENDER * p );

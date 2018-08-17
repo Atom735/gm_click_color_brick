@@ -124,8 +124,6 @@ VOID    RENDER_Flush( RENDER * p, HDC hDC )
 
 
 
-
-
 VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
 {
     assert( p != NULL );
@@ -159,17 +157,10 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
     const FLOAT f_x = (FLOAT)x/13.0f;
     const FLOAT f_y = (FLOAT)y/13.0f;
 
-    VOID ShadowRect( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a )
-    {
-        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
-        const UINT ux1 = __min( (UINT)roundf(x+w), _w );
-        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
-        const UINT uy1 = __min( (UINT)roundf(y+h), _h );
-        FOR_(iy,uy0,uy1) FOR_(ix,ux0,ux1) GET_LIGHT(ix,iy) *= 1.0f-a;
-    }
-
     VOID ShadowRectLV( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
     {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
         const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
         const UINT ux1 = __min( (UINT)roundf(x+w), _w );
         const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
@@ -186,6 +177,8 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
 
     VOID ShadowRectLH( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
     {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
         const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
         const UINT ux1 = __min( (UINT)roundf(x+w), _w );
         const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
@@ -200,8 +193,10 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
         }
     }
 
-    VOID ShadowRectL_R0( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
+    VOID ShadowRectL_R3( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
     {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
         const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
         const UINT ux1 = __min( (UINT)roundf(x+w), _w );
         const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
@@ -213,7 +208,31 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
             {
                 const FLOAT fx = ((FLOAT)ix+0.5f-x-w)/w;
                 const FLOAT _r = fx*fx+fy*fy;
-                const FLOAT f = (_r<1.0f) ? 1.0f-sqrtf(_r) : 0.0f;
+                if (_r>1.0f) continue;
+                const FLOAT f = 1.0f-sqrtf(_r);
+                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
+            }
+        }
+    }
+
+
+    VOID ShadowRectL_R2( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h), _h );
+        FOR_(iy,uy0,uy1)
+        {
+            const FLOAT fy = ((FLOAT)iy+0.5f-y-h)/h;
+            FOR_(ix,ux0,ux1)
+            {
+                const FLOAT fx = ((FLOAT)ix+0.5f-x)/w;
+                const FLOAT _r = fx*fx+fy*fy;
+                if (_r>1.0f) continue;
+                const FLOAT f = 1.0f-sqrtf(_r);
                 GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
             }
         }
@@ -221,25 +240,8 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
 
     VOID ShadowRectL_R1( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
     {
-        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
-        const UINT ux1 = __min( (UINT)roundf(x+w), _w );
-        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
-        const UINT uy1 = __min( (UINT)roundf(y+h), _h );
-        FOR_(iy,uy0,uy1)
-        {
-            const FLOAT fy = ((FLOAT)iy+0.5f-y-h)/h;
-            FOR_(ix,ux0,ux1)
-            {
-                const FLOAT fx = ((FLOAT)ix+0.5f-x)/w;
-                const FLOAT _r = fx*fx+fy*fy;
-                const FLOAT f = (_r<1.0f) ? 1.0f-sqrtf(_r) : 0.0f;
-                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
-            }
-        }
-    }
-
-    VOID ShadowRectL_R2( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
-    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
         const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
         const UINT ux1 = __min( (UINT)roundf(x+w), _w );
         const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
@@ -251,14 +253,17 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
             {
                 const FLOAT fx = ((FLOAT)ix+0.5f-x-w)/w;
                 const FLOAT _r = fx*fx+fy*fy;
-                const FLOAT f = (_r<1.0f) ? 1.0f-sqrtf(_r) : 0.0f;
+                if (_r>1.0f) continue;
+                const FLOAT f = 1.0f-sqrtf(_r);
                 GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
             }
         }
     }
 
-    VOID ShadowRectL_R3( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
+    VOID ShadowRectL_R0( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b )
     {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
         const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
         const UINT ux1 = __min( (UINT)roundf(x+w), _w );
         const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
@@ -270,63 +275,234 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
             {
                 const FLOAT fx = ((FLOAT)ix+0.5f-x)/w;
                 const FLOAT _r = fx*fx+fy*fy;
-                const FLOAT f = (_r<1.0f) ? 1.0f-sqrtf(_r) : 0.0f;
+                if (_r>1.0f) continue;
+                const FLOAT f = 1.0f-sqrtf(_r);
                 GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
             }
         }
     }
 
-    ShadowRect    (f_x      ,f_y      ,9.0f,9.0f,0.5f);
-    ShadowRect    (f_x+ 9.0f,f_y+ 9.0f,3.0f,3.0f,0.5f);
-    ShadowRect    (f_x+12.0f,f_y+12.0f,2.0f,2.0f,0.5f);
-    ShadowRect    (f_x+14.0f,f_y+14.0f,1.0f,1.0f,0.5f);
+    VOID ShadowRectL_RR0( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b, FLOAT w2, FLOAT h2 )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w2), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h2), _h );
+        FOR_(iy,uy0,uy1)
+        {
+            const FLOAT fy = ((FLOAT)iy+0.5f-y)/h;
+            const FLOAT fy2 = ((FLOAT)iy+0.5f-y)/h2;
+            FOR_(ix,ux0,ux1)
+            {
+                const FLOAT fx = ((FLOAT)ix+0.5f-x)/w;
+                const FLOAT _r = fx*fx+fy*fy;
+                if (_r<1.0f) continue;
+                const FLOAT fx2 = ((FLOAT)ix+0.5f-x)/w2;
+                const FLOAT _r2 = fx2*fx2+fy2*fy2;
+                if (_r2>1.0f) continue;
+                const FLOAT f = (1.0f-sqrtf(_r2))/(sqrtf(_r)-sqrtf(_r2));
+                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
+            }
+        }
+    }
 
-    ShadowRectLV  (f_x      ,f_y- 9.0f,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectLV  (f_x+ 9.0f,f_y+ 6.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectLV  (f_x+12.0f,f_y+10.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectLV  (f_x+14.0f,f_y+13.0f,1.0f,1.0f,0.0f,0.5f);
+    VOID ShadowRectL_RR1( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b, FLOAT w2, FLOAT h2 )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w2), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h2), _h );
+        FOR_(iy,uy0,uy1)
+        {
+            const FLOAT fy = ((FLOAT)iy+0.5f-y)/h;
+            const FLOAT fy2 = ((FLOAT)iy+0.5f-y)/h2;
+            FOR_(ix,ux0,ux1)
+            {
+                const FLOAT fx = ((FLOAT)ix+0.5f-x-w2)/w;
+                const FLOAT _r = fx*fx+fy*fy;
+                if (_r<1.0f) continue;
+                const FLOAT fx2 = ((FLOAT)ix+0.5f-x-w2)/w2;
+                const FLOAT _r2 = fx2*fx2+fy2*fy2;
+                if (_r2>1.0f) continue;
+                const FLOAT f = (1.0f-sqrtf(_r2))/(sqrtf(_r)-sqrtf(_r2));
+                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
+            }
+        }
+    }
 
-    ShadowRectLV  (f_x      ,f_y+ 9.0f,9.0f,9.0f,0.5f,0.0f);
-    ShadowRectLV  (f_x+ 9.0f,f_y+12.0f,3.0f,3.0f,0.5f,0.0f);
-    ShadowRectLV  (f_x+12.0f,f_y+14.0f,2.0f,2.0f,0.5f,0.0f);
-    ShadowRectLV  (f_x+14.0f,f_y+15.0f,1.0f,1.0f,0.5f,0.0f);
 
-    ShadowRectLH  (f_x- 9.0f,f_y      ,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectLH  (f_x+ 6.0f,f_y+ 9.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectLH  (f_x+10.0f,f_y+12.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectLH  (f_x+13.0f,f_y+14.0f,1.0f,1.0f,0.0f,0.5f);
+    VOID ShadowRectL_RR2( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b, FLOAT w2, FLOAT h2 )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w2), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h2), _h );
+        FOR_(iy,uy0,uy1)
+        {
+            const FLOAT fy = ((FLOAT)iy+0.5f-y-h2)/h;
+            const FLOAT fy2 = ((FLOAT)iy+0.5f-y-h2)/h2;
+            FOR_(ix,ux0,ux1)
+            {
+                const FLOAT fx = ((FLOAT)ix+0.5f-x)/w;
+                const FLOAT _r = fx*fx+fy*fy;
+                if (_r<1.0f) continue;
+                const FLOAT fx2 = ((FLOAT)ix+0.5f-x)/w2;
+                const FLOAT _r2 = fx2*fx2+fy2*fy2;
+                if (_r2>1.0f) continue;
+                const FLOAT f = (1.0f-_r2)/(_r-_r2);
+                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
+            }
+        }
+    }
 
-    ShadowRectLH  (f_x+ 9.0f,f_y      ,9.0f,9.0f,0.5f,0.0f);
-    ShadowRectLH  (f_x+12.0f,f_y+ 9.0f,3.0f,3.0f,0.5f,0.0f);
-    ShadowRectLH  (f_x+14.0f,f_y+12.0f,2.0f,2.0f,0.5f,0.0f);
-    ShadowRectLH  (f_x+15.0f,f_y+14.0f,1.0f,1.0f,0.5f,0.0f);
+    VOID ShadowRectL_RR3( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT b, FLOAT w2, FLOAT h2 )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w2), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h2), _h );
+        FOR_(iy,uy0,uy1)
+        {
+            const FLOAT fy = ((FLOAT)iy+0.5f-y-h2)/h;
+            const FLOAT fy2 = ((FLOAT)iy+0.5f-y-h2)/h2;
+            FOR_(ix,ux0,ux1)
+            {
+                const FLOAT fx = ((FLOAT)ix+0.5f-x-w2)/w;
+                const FLOAT _r = fx*fx+fy*fy;
+                if (_r<1.0f) continue;
+                const FLOAT fx2 = ((FLOAT)ix+0.5f-x-w2)/w2;
+                const FLOAT _r2 = fx2*fx2+fy2*fy2;
+                if (_r2>1.0f) continue;
+                const FLOAT f = (1.0f-_r2)/(_r-_r2);
+                GET_LIGHT(ix,iy) *= 1.0f-a+f*(a-b);
+            }
+        }
+    }
 
-    ShadowRectL_R0(f_x- 9.0f,f_y- 9.0f,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectL_R0(f_x+ 6.0f,f_y+ 6.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectL_R0(f_x+10.0f,f_y+10.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectL_R0(f_x+13.0f,f_y+13.0f,1.0f,1.0f,0.0f,0.5f);
+    VOID ShadowRect( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a )
+    {
+        if (x+w<0.0f) return;
+        if (y+h<0.0f) return;
+        const UINT ux0 = (x<0.0f) ? 0 : (UINT)roundf(x);
+        const UINT ux1 = __min( (UINT)roundf(x+w), _w );
+        const UINT uy0 = (y<0.0f) ? 0 : (UINT)roundf(y);
+        const UINT uy1 = __min( (UINT)roundf(y+h), _h );
+        FOR_(iy,uy0,uy1) FOR_(ix,ux0,ux1) GET_LIGHT(ix,iy) *= 1.0f-a;
+    }
+    VOID ShadowRectR( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT rx, FLOAT ry )
+    {
+        if (rx <= 0.5f)
+        {
+            ShadowRect(x,y,w,h,a);
+            return;
+        }
+        if (ry <= 0.5f)
+        {
+            ShadowRect(x,y,w,h,a);
+            return;
+        }
+        if( rx+rx>w ) rx = w*0.5f;
+        if( ry+ry>h ) ry = h*0.5f;
+        ShadowRectL_R3(x     ,y     ,  rx   ,  ry   ,a,a);
+        ShadowRect    (x+  rx,y     ,w-rx-rx,  ry   ,a);
+        ShadowRectL_R2(x+w-rx,y     ,  rx   ,  ry   ,a,a);
+        ShadowRect    (x     ,y+  ry,w      ,h-ry-ry,a);
+        ShadowRectL_R1(x     ,y+h-ry,  rx   ,  ry   ,a,a);
+        ShadowRect    (x+  rx,y+h-ry,w-rx-rx,  ry   ,a);
+        ShadowRectL_R0(x+w-rx,y+h-ry,  rx   ,  ry   ,a,a);
+    }
 
-    ShadowRectL_R1(f_x+ 9.0f,f_y- 9.0f,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectL_R1(f_x+12.0f,f_y+ 6.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectL_R1(f_x+14.0f,f_y+10.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectL_R1(f_x+15.0f,f_y+13.0f,1.0f,1.0f,0.0f,0.5f);
 
-    ShadowRectL_R2(f_x- 9.0f,f_y+ 9.0f,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectL_R2(f_x+ 6.0f,f_y+12.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectL_R2(f_x+10.0f,f_y+14.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectL_R2(f_x+13.0f,f_y+15.0f,1.0f,1.0f,0.0f,0.5f);
+    VOID ShadowRectAA( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT r )
+    {
+        if(r>w) r=w;
+        if(r>h) r=h;
+        const FLOAT r2 = r*0.5f;
+        ShadowRect    (x+r2  ,y+r2  ,w-r,h-r,a);
+        ShadowRectLV  (x+r2  ,y-r2  ,w-r,  r,0.0f,a);
+        ShadowRectL_R2(x-r2+w,y-r2  ,  r,  r,0.0f,a);
+        ShadowRectLH  (x-r2+w,y+r2  ,  r,h-r,a,0.0f);
+        ShadowRectL_R0(x-r2+w,y-r2+h,  r,  r,0.0f,a);
+        ShadowRectLV  (x+r2  ,y-r2+h,w-r,  r,a,0.0f);
+        ShadowRectL_R1(x-r2  ,y-r2+h,  r,  r,0.0f,a);
+        ShadowRectLH  (x-r2  ,y+r2  ,  r,h-r,0.0f,a);
+        ShadowRectL_R3(x-r2  ,y-r2  ,  r,  r,0.0f,a);
+    }
 
-    ShadowRectL_R3(f_x+ 9.0f,f_y+ 9.0f,9.0f,9.0f,0.0f,0.5f);
-    ShadowRectL_R3(f_x+12.0f,f_y+12.0f,3.0f,3.0f,0.0f,0.5f);
-    ShadowRectL_R3(f_x+14.0f,f_y+14.0f,2.0f,2.0f,0.0f,0.5f);
-    ShadowRectL_R3(f_x+15.0f,f_y+15.0f,1.0f,1.0f,0.0f,0.5f);
+    VOID ShadowRectAAR( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT a, FLOAT rx, FLOAT ry, FLOAT rr )
+    {
+        if (rx <= 0.5f)
+        {
+            ShadowRectAA(x,y,w,h,a,rr);
+            return;
+        }
+        if (ry <= 0.5f)
+        {
+            ShadowRectAA(x,y,w,h,a,rr);
+            return;
+        }
+        if( rx+rx<rr ) rr = rx*2.0f;
+        if( ry+ry<rr ) rr = ry*2.0f;
+        if( rx+rx>w-rr ) rx = (w-rr)*0.5f;
+        if( ry+ry>h-rr ) ry = (h-rr)*0.5f;
+        const FLOAT r2 = rr*0.5f;
 
+        const FLOAT fx0 = x-r2;
+        const FLOAT fx1 = x+r2;
+        const FLOAT fx2 = x+rx;
+        const FLOAT fx3 = x-rx+w;
+        const FLOAT fx4 = x-r2+w;
+        // const FLOAT fx5 = x+r2+w;
+
+        const FLOAT fy0 = y-r2;
+        const FLOAT fy1 = y+r2;
+        const FLOAT fy2 = y+ry;
+        const FLOAT fy3 = y-ry+h;
+        const FLOAT fy4 = y-r2+h;
+        // const FLOAT fy5 = y+r2+h;
+
+        ShadowRectL_RR3(fx0,fy0,rx-r2,ry-r2,0.0f,a,rx+r2,ry+r2);
+        ShadowRectL_RR2(fx3,fy0,rx-r2,ry-r2,0.0f,a,rx+r2,ry+r2);
+        ShadowRectL_RR1(fx0,fy3,rx-r2,ry-r2,0.0f,a,rx+r2,ry+r2);
+        ShadowRectL_RR0(fx3,fy3,rx-r2,ry-r2,0.0f,a,rx+r2,ry+r2);
+
+        ShadowRectLV(fx2,fy0,fx3-fx2,rr,0.0f,a);
+        ShadowRectLV(fx2,fy4,fx3-fx2,rr,a,0.0f);
+        ShadowRectLH(fx0,fy2,rr,fy3-fy2,0.0f,a);
+        ShadowRectLH(fx4,fy2,rr,fy3-fy2,a,0.0f);
+
+        ShadowRectL_R3 (fx1,fy1,rx-r2,ry-r2,a,a);
+        ShadowRectL_R2 (fx3,fy1,rx-r2,ry-r2,a,a);
+        ShadowRectL_R1 (fx1,fy3,rx-r2,ry-r2,a,a);
+        ShadowRectL_R0 (fx3,fy3,rx-r2,ry-r2,a,a);
+
+        ShadowRect(fx2,fy1,fx3-fx2,ry-r2,a);
+        ShadowRect(fx1,fy2,w-rr,fy3-fy2,a);
+        ShadowRect(fx2,fy3,fx3-fx2,ry-r2,a);
+
+    }
+
+    // ShadowRectR( 10.0f, 10.0f, 1000.0f/13.0f, 1000.0f/13.0f, 0.5f, f_x, f_y );
+    // ShadowRectAAR( 11.0f, 11.0f, 1000.0f/13.0f-2.0f, 700.0f/13.0f-2.0f, 0.5f, f_x, f_y, 1.0f );
+
+    ShadowRectL_RR0( 1.0f, 1.0f, 8.0f, 8.0f, 0.9f, 0.0f, 100.0f, 766.0f );
+    ShadowRectL_RR0( 1.0f, 1.0f, 100.0f, 766.0f, 0.5f, 1.0f, 1024.0f, 768.0f );
+    ShadowRectL_RR0( 1.0f, 1.0f,1024.0f, 768.0f, 1.0f, 0.4f, 1300.0f, 1300.0f );
 
     FOR_ALL_PIXELS_VERTICAL(iy)
     FOR_ALL_PIXELS_HORIZONTAL(ix)
     {
-        memset(_pc+(ix+iy*_w),(BYTE)GET_LIGHT(ix/13,iy/13),4);
+        memset(_pc+(ix+iy*_w),(BYTE)GET_LIGHT(ix,iy),4);
     }
+
 
     p->bmp_hFont_Old = SelectFont( p->bmp_hDC, p->bmp_hFont );
 
@@ -350,9 +526,9 @@ VOID    RENDER_DrawTest( RENDER * p, UINT w, UINT h, UINT x, UINT y, UINT i )
     SelectFont( p->bmp_hDC, p->bmp_hFont_Old );
 
     FOR_ALL_PIXELS_VERTICAL(iy)
-        GET_COLOR(x,iy)^=0xfffc00;
+        GET_COLOR(x,iy)^=(iy>>2)&1?0x7f<<16:0x7f<<8;
     FOR_ALL_PIXELS_HORIZONTAL(ix)
-        GET_COLOR(ix,y)^=0x00fcff;
+        GET_COLOR(ix,y)^=(ix>>2)&1?0x7f:0x7f<<8;
 
 
 }

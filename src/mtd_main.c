@@ -102,14 +102,14 @@ LRESULT CALLBACK rMsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
         case WM_MOUSEMOVE:
         {
             _cu_X = GET_X_LPARAM(lParam);
-            _cu_Y = _cl_H - GET_Y_LPARAM(lParam);
+            _cu_Y = _cl_H-1 - GET_Y_LPARAM(lParam);
             InvalidateRect( hWnd, NULL, FALSE );
             return 0;
         }
         case WM_LBUTTONDOWN:
         {
             _cu_X = GET_X_LPARAM(lParam);
-            _cu_Y = _cl_H - GET_Y_LPARAM(lParam);
+            _cu_Y = _cl_H-1 - GET_Y_LPARAM(lParam);
             InvalidateRect( hWnd, NULL, FALSE );
             return 0;
         }
